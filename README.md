@@ -50,6 +50,16 @@ npx tsx scripts/simulate.ts   # 여러 프로필로 식단 예산·영양 달성
 
 `vite.config.ts`의 `base: './'` 덕분에 GitHub Pages 같은 하위 경로에서도 동작합니다.
 
+## GitHub Pages 배포
+
+`.github/workflows/deploy.yml`이 푸시할 때마다 빌드해서 Pages에 올립니다. 처음 한 번만 저장소 설정이 필요해요.
+
+1. 저장소가 비공개라면 GitHub Pro 이상이 필요합니다. 무료 계정이면 **Settings → General → Danger Zone → Change visibility**에서 공개로 바꾸세요.
+2. **Settings → Pages → Build and deployment → Source**를 **GitHub Actions**로 선택하세요.
+3. **Actions** 탭에서 "Deploy to GitHub Pages"를 다시 실행하면 `https://neo0364-coder.github.io/Budgetfit/` 에 올라갑니다.
+
+휴대폰에서 주소를 열고 Safari는 공유 → **홈 화면에 추가**, Chrome은 메뉴 → **앱 설치 / 홈 화면에 추가**를 누르면 앱처럼 쓸 수 있어요.
+
 ## 구조
 
 ```
