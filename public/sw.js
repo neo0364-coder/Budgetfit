@@ -1,5 +1,5 @@
 // 알뜰핏 서비스 워커: 앱 화면은 오프라인에서도 열리게 캐시하고, API 요청은 건드리지 않는다.
-const CACHE = 'alddeulfit-v2';
+const CACHE = 'alddeulfit-v3';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html', './manifest.webmanifest', './favicon.svg'])));

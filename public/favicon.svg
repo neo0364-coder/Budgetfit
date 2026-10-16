@@ -1,18 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#3fd193"/>
-      <stop offset="1" stop-color="#139656"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
-  <g transform="rotate(-18 256 300)">
-    <rect x="150" y="283" width="212" height="34" rx="17" fill="#ffffff"/>
-    <rect x="104" y="228" width="50" height="144" rx="22" fill="#ffffff"/>
-    <rect x="64" y="254" width="42" height="92" rx="18" fill="#c9f2dc"/>
-    <rect x="358" y="228" width="50" height="144" rx="22" fill="#ffffff"/>
-    <rect x="406" y="254" width="42" height="92" rx="18" fill="#c9f2dc"/>
-  </g>
-  <circle cx="138" cy="136" r="62" fill="#ffc93c" stroke="#ffffff" stroke-width="12"/>
-  <path d="M108 112l12 48 18-38 18 38 12-48M103 134h70" fill="none" stroke="#7a4f00" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='116' fill='#ffc93c'/><path d='M120 128 L188 384 L256 196 L324 384 L392 128' fill='none' stroke='#1fae67' stroke-width='50' stroke-linecap='round' stroke-linejoin='round'/><g transform='translate(0 262)'><rect x='96' y='-15' width='320' height='30' rx='15' fill='#1d2a22' stroke='#ffc93c' stroke-width='8' paint-order='stroke'/><rect x='62' y='-62' width='44' height='124' rx='18' fill='#1d2a22' stroke='#ffc93c' stroke-width='8' paint-order='stroke'/><rect x='30' y='-38' width='34' height='76' rx='14' fill='#3a4a40' stroke='#ffc93c' stroke-width='8' paint-order='stroke'/><rect x='406' y='-62' width='44' height='124' rx='18' fill='#1d2a22' stroke='#ffc93c' stroke-width='8' paint-order='stroke'/><rect x='448' y='-38' width='34' height='76' rx='14' fill='#3a4a40' stroke='#ffc93c' stroke-width='8' paint-order='stroke'/></g></svg>
