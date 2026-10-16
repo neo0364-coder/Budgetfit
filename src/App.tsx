@@ -206,6 +206,7 @@ export default function App() {
               setConversation={setConversation}
               planStamp={plan.createdAt}
               onNewConversation={() => setConversation(newConversation(profile, targets, plan))}
+              onToast={showToast}
             />
           </Suspense>
         )}

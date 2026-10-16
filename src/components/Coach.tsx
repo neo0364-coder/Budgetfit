@@ -3,6 +3,7 @@ import { AiError, askCoach } from '../lib/ai';
 import { coachMode } from '../lib/coachConfig';
 import { basicAnswer } from '../lib/basicCoach';
 import type { ChatMessage, Conversation } from '../types';
+import AskAiSheet from './AskAiSheet';
 
 const QUICK_PROMPTS = [
   '💰 식비를 더 줄이고 싶어',
@@ -19,9 +20,11 @@ interface Props {
   setConversation: (c: Conversation) => void;
   planStamp: string;
   onNewConversation: () => void;
+  onToast: (msg: string) => void;
 }
 
-export default function Coach({ apiKey, conversation, setConversation, planStamp, onNewConversation }: Props) {
+export default function Coach({ apiKey, conversation, setConversation, planStamp, onNewConversation, onToast }: Props) {
+  const [askAi, setAskAi] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -83,12 +86,17 @@ export default function Coach({ apiKey, conversation, setConversation, planStamp
         <div>
           <h1>코치 💬</h1>
           <p className="muted small coach-mode">
-            {mode === 'basic' ? '🟢 기본 코치 · 무료 · 인터넷 없이도 답해요' : '🤖 AI 코치 · 내 플랜을 알고 답해요'}
+            {mode === 'basic' ? '🟢 무료 기본 코치' : '🤖 AI 코치 · 내 플랜을 알고 답해요'}
           </p>
         </div>
-        <button className="btn soft sm" onClick={onNewConversation} disabled={streaming !== null}>
-          새 대화
-        </button>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button className="btn soft sm" onClick={() => setAskAi(input || '')}>
+            🤖 AI 앱으로
+          </button>
+          <button className="btn ghost sm" onClick={onNewConversation} disabled={streaming !== null}>
+            새 대화
+          </button>
+        </div>
       </div>
       {conversation.planStamp !== planStamp && conversation.messages.length > 0 && (
         <p className="notice info">플랜이 바뀌었어요. "새 대화"를 누르면 최신 플랜으로 상담해요.</p>
@@ -118,7 +126,14 @@ export default function Coach({ apiKey, conversation, setConversation, planStamp
           ) : (
             <div key={i} className="coach-avatar">
               <span className="face">🧑‍🏫</span>
-              <div className="bubble assistant">{m.text}</div>
+              <div className="bubble assistant">
+                {m.text}
+                {m.local && conversation.messages[i - 1]?.role === 'user' && (
+                  <button className="ask-more" onClick={() => setAskAi(conversation.messages[i - 1].text)}>
+                    🤖 AI 앱에 더 자세히 물어보기
+                  </button>
+                )}
+              </div>
             </div>
           ),
         )}
@@ -131,6 +146,17 @@ export default function Coach({ apiKey, conversation, setConversation, planStamp
         {error && <p className="notice error">{error}</p>}
         <div ref={endRef} />
       </div>
+
+      {askAi !== null && (
+        <AskAiSheet
+          context={conversation.context}
+          initialQuestion={askAi}
+          onClose={() => setAskAi(null)}
+          onCopied={(msg) => {
+            onToast(msg);
+          }}
+        />
+      )}
 
       <form
         className="composer"

@@ -47,3 +47,37 @@ ${meals}
 이번 주 운동:
 ${workouts}`;
 }
+
+/**
+ * 이용자가 쓰는 AI 앱(ChatGPT, Claude 등)에 붙여넣을 질문.
+ * 내 플랜을 짧게 요약해서 함께 보내면 앱 밖에서도 맞춤 답변을 받을 수 있다.
+ */
+export function buildSharePrompt({ profile, targets, plan }: CoachContext, question: string): string {
+  const meals = plan.meals
+    .map((d, i) => `${DAY_LABELS[i]}: ${d.meals.map((m) => RECIPE_BY_ID[m.recipeId].name).join(' / ')}`)
+    .join('\n');
+  const workouts = plan.workouts.length
+    ? plan.workouts
+        .map((w) => `${DAY_LABELS[w.day]} ${w.time} ${w.title}: ${w.exercises.map((e) => `${EXERCISE_BY_ID[e.exerciseId].name} ${e.sets}x${e.reps}`).join(', ')}`)
+        .join('\n')
+    : '없음';
+  return `너는 다정한 한국어 건강 코치야. 아래 내 정보와 이번 주 계획을 참고해서, 마지막 질문에 짧고 구체적으로(메뉴·가격·세트 수처럼 바로 실천할 수 있게) 답해 줘. 의학적 진단은 하지 말고, 필요하면 전문가 상담을 권해 줘.
+
+[내 정보]
+${profile.sex === 'male' ? '남성' : '여성'} ${profile.age}세, ${profile.heightCm}cm, ${profile.weightKg}kg → 목표 ${profile.targetWeightKg}kg (${GOAL_LABEL[profile.goal]})
+활동량: ${ACTIVITY_LABELS[profile.activity]}
+기상 ${profile.wakeTime}, 취침 ${profile.sleepTime}, 하루 ${profile.mealsPerDay}끼${profile.snacks ? ' + 간식' : ''}
+식비 예산: 주 ${won(profile.weeklyBudget)}
+운동: ${profile.workoutDays.length ? `${profile.workoutDays.map((d) => DAY_LABELS[d]).join('·')}요일 ${profile.workoutMinutes}분, ${EQUIPMENT_LABELS[profile.equipment]}, 난이도 ${WORKOUT_LEVELS[profile.workoutLevel].label}` : '없음'}
+못 먹는 음식: ${profile.exclude.length ? profile.exclude.map((a) => ALLERGEN_LABELS[a]).join(', ') : '없음'}
+하루 목표: ${targets.kcal}kcal, 단백질 ${targets.proteinG}g
+
+[이번 주 식단]
+${meals}
+
+[이번 주 운동]
+${workouts}
+
+[질문]
+${question.trim() || '내 계획을 보고 이번 주에 더 잘할 수 있는 점 3가지만 알려 줘.'}`;
+}
