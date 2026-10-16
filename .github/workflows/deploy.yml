@@ -25,6 +25,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          # 저장소 Settings → Secrets and variables → Actions → Variables 에 COACH_API_URL을 넣으면 AI 코치가 켜진다
+          VITE_COACH_API_URL: ${{ vars.COACH_API_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -1,54 +1,81 @@
-# BudgetFit 💪🍚
+# 알뜰핏 💪🍚
 
-예산, 목표, 생활 패턴에 맞춰 **운동**과 **저렴한 식단**을 설계해 주는 AI 건강관리 웹앱(PWA)입니다.
-휴대폰 브라우저에서 열고 "홈 화면에 추가"하면 앱처럼 쓸 수 있어요.
+내 **예산**, **목표**, **생활 패턴**에 맞춰 운동과 저렴한 집밥 식단을 짜 주는 무료 건강관리 웹앱(PWA)입니다.
+휴대폰에서 주소를 열고 "홈 화면에 추가"하면 앱처럼 쓸 수 있어요.
+
+👉 https://neo0364-coder.github.io/Budgetfit/
 
 ## 주요 기능
 
 | 탭 | 내용 |
 |---|---|
-| **오늘** | 오늘 먹을 식단과 운동을 체크리스트로 확인 |
-| **식단** | 7일 식단, 메뉴별 재료·조리법·가격, **팩 단위 장보기 목록**(집에 있는 재료 체크 시 금액 차감) |
-| **운동** | 가능한 요일·시간·장비·수준에 맞춘 주간 루틴(세트·횟수·휴식·자세 팁) |
-| **AI 코치** | Claude 기반 상담. 내 프로필과 이번 주 플랜을 알고 메뉴 교체·예산 절약·운동 대체를 도와줌 |
-| **내 정보** | 체중 기록 그래프, 기초대사량·목표 칼로리·탄단지, 목표 도달 예상 기간 |
+| **오늘** | 인사말·오늘의 한마디, 오늘 미션(식사·운동) 진행 링, 연속 달성일 🔥, 이번 주 기록 |
+| **식단** | 7일 식단, 재료·만드는 법·레시피 영상 검색, **팩 단위 장보기 목록**, 식단 난이도(쉬움/보통/도전) |
+| **운동** | 주간 루틴, 운동을 누르면 **방법·주의점 + 유튜브 자세 영상** 바로가기, 운동 난이도(쉬움/보통/도전) |
+| **코치** | 무료 기본 코치(인터넷 없이 동작) 또는 AI 코치(Claude). 식비 절약·메뉴 교체·통증 시 대체 운동 등 |
+| **내 정보** | 배지 10종 🏅, 체중 그래프, 목표 숫자, 화면 테마(밝게/어둡게/기기 설정) |
+
+식사·운동을 완료하면 칭찬 메시지와 축하 효과가 나오고, 오늘 미션을 모두 끝내거나 새 배지를 따면 한 번 더 축하해요.
 
 ## 플랜은 어떻게 만들어지나요?
 
-- **목표 칼로리**: Mifflin-St Jeor 기초대사량 × 활동계수, 감량 -20% / 증량 +10% (기초대사량 아래로는 내려가지 않음)
-- **단백질**: 감량·증량 체중 1kg당 1.6g, 유지 1.4g
-- **식단** (`src/lib/mealPlanner.ts`): 실제 장보기는 팩 단위라서 메뉴 원가만 더하면 예산을 넘기 쉽습니다.
-  그래서 일주일 전체의 **실제 장보기 금액**(일반 재료는 팩 값, 냉동·건조 등 오래 두는 재료는 사용분)과
+- **목표 칼로리**: Mifflin-St Jeor 기초대사량 × 활동계수. 식단 난이도에 따라 감량 -10/-20/-25%, 증량 +5/+10/+15% (기초대사량 아래로는 내려가지 않음)
+- **단백질**: 체중 1kg당 1.2~1.8g (목표·난이도별)
+- **식단** (`src/lib/mealPlanner.ts`): 재료는 팩 단위로 사야 해서 메뉴 원가만 더하면 예산을 넘기 쉽습니다.
+  그래서 일주일 전체의 **실제 장보기 금액**(일반 재료는 팩 값, 냉동·건조처럼 오래 두는 재료는 사용분)과
   칼로리·단백질 오차, 메뉴 반복을 한 점수로 묶고, 담금질 기법(simulated annealing)으로 재료를 돌려 쓰는 식단을 찾습니다.
-  하루 양은 목표 칼로리에 맞춰 0.8~1.6인분으로 조절합니다. 알레르기·기피 식품은 제외됩니다.
-- **식사 시간**: 기상·취침 시간으로 계산(취침 3시간 전까지 저녁 마무리)
+  식단 난이도 "쉬움"이면 조리 시간이 짧은 메뉴를 고릅니다.
 - **운동** (`src/lib/workoutPlanner.ts`): 주 1~3일 전신, 4일 상·하체 분할, 5일 이상 분할+유산소.
-  목표에 따라 횟수·휴식을 바꾸고, 남는 시간은 유산소로 채웁니다. 선호 시간대에 맞춰 시작 시간을 잡습니다(저녁이면 저녁 식사 전).
+  난이도에 따라 세트 수(2/3/4), 휴식 시간, 고를 수 있는 동작(의자 스쿼트 → 점프 스쿼트 등)이 바뀝니다.
 
-재료 가격은 2026년 대형마트·온라인 평균을 기준으로 한 추정치이며 `src/data/foods.ts`에서 수정할 수 있습니다.
+재료 가격은 2026년 대형마트·온라인 평균을 기준으로 한 추정치이며 `src/data/foods.ts`에서 고칠 수 있습니다.
+운동 설명과 유튜브 검색어는 `src/data/exercises.ts`에 있습니다.
 
-## AI 코치 (Claude)
+## 코치: 누구나 쓸 수 있게
 
-- 모델: `claude-opus-5-5`, 스트리밍 응답, 서버 측 거절 폴백(`fallbacks: "default"`) 사용
-- [Claude Console](https://console.anthropic.com/settings/keys)에서 발급한 **본인 API 키**를 앱에 입력해 사용합니다.
-  키는 브라우저 localStorage에만 저장되고 Anthropic API로 직접 전송됩니다(별도 서버 없음).
-  여러 사람에게 배포할 서비스라면 키를 서버에 두는 백엔드 프록시로 바꾸는 것을 권장합니다.
-- 대화 시작 시 프로필·플랜을 시스템 프롬프트로 고정하고, 이후 대화는 응답 원문을 그대로 이어 붙입니다.
-  플랜을 바꾸면 "새 대화"로 최신 플랜을 반영하세요.
+코치는 세 가지 방식 중 하나로 동작합니다. 위에서부터 먼저 켜져 있는 방식을 씁니다.
 
-AI 키가 없어도 식단·운동·장보기·기록 기능은 모두 오프라인으로 동작합니다.
+1. **AI 코치 서버** — 운영자가 서버 하나를 올려 두면, 이용자는 **가입이나 API 키 없이** AI 코치를 씁니다.
+2. **내 API 키** — 서버가 없을 때, 내 정보 → 고급 설정에서 본인 Claude API 키를 넣은 사람만 AI 코치를 씁니다.
+3. **기본 코치** — 위 둘이 없거나 AI 연결이 실패하면, 앱 안의 규칙 기반 코치가 내 플랜 데이터로 답합니다(무료·오프라인).
+
+### AI 코치 서버 올리기 (Cloudflare Workers, 무료 요금제로 시작 가능)
+
+`server/worker.ts`는 운영자의 Anthropic API 키를 서버에만 보관하고 앱의 질문을 Claude에 전달합니다.
+아무 글이나 보내는 범용 프록시로 쓰이지 않도록, 시스템 프롬프트는 서버가 직접 만들고
+요청 데이터(프로필·플랜·대화)는 정해진 형태와 길이만 받습니다. IP당 10분에 20회까지 질문할 수 있습니다.
+
+1. [Claude Console](https://console.anthropic.com)에서 API 키를 만들고, **Limits에서 월 지출 한도를 꼭 설정**하세요.
+2. [Cloudflare](https://dash.cloudflare.com) 계정을 만든 뒤 이 저장소에서:
+   ```bash
+   npm install
+   cd server
+   npx wrangler login
+   npx wrangler secret put ANTHROPIC_API_KEY   # 키 붙여넣기
+   npx wrangler deploy
+   ```
+   배포가 끝나면 `https://alddeulfit-coach.<계정>.workers.dev` 같은 주소가 나옵니다.
+3. GitHub 저장소 **Settings → Secrets and variables → Actions → Variables**에 `COACH_API_URL` = 위 주소를 추가하고,
+   Actions에서 "Deploy to GitHub Pages"를 다시 실행하면 앱이 AI 코치 서버를 씁니다.
+
+`server/wrangler.toml`에서 허용 사이트(`ALLOWED_ORIGINS`), 질문 횟수(`RATE_LIMIT`), 모델(`COACH_MODEL`)을 바꿀 수 있습니다.
+
+**비용 참고** (질문 1회, 시스템 프롬프트 약 2천 토큰 + 답변 약 500 토큰 기준 대략값)
+- 기본값 `claude-opus-5-5`: 약 $0.02~0.03 (30~40원)
+- `claude-haiku-5-5`로 바꾸면: 약 $0.001 미만 (1원 안팎). 답변 품질은 Opus보다 단순할 수 있습니다.
+
+로컬 검사: `npx tsx scripts/test-worker.ts` (가짜 Anthropic API로 검증·CORS·횟수 제한·스트리밍 확인)
 
 ## 실행
 
 ```bash
 npm install
 npm run dev        # 개발 서버
-npm run build      # dist/ 에 정적 파일 생성 (아무 정적 호스팅에나 올리면 됨)
+npm run build      # dist/ 에 정적 파일 생성
 npm run preview    # 빌드 결과 미리보기
-npx tsx scripts/simulate.ts   # 여러 프로필로 식단 예산·영양 달성도 확인
+npx tsx scripts/simulate.ts      # 여러 프로필로 식단 예산·영양 달성도 확인
+npx tsx scripts/test-worker.ts   # AI 코치 서버 검사
 ```
-
-`vite.config.ts`의 `base: './'` 덕분에 GitHub Pages 같은 하위 경로에서도 동작합니다.
 
 ## GitHub Pages 배포
 
@@ -64,14 +91,19 @@ npx tsx scripts/simulate.ts   # 여러 프로필로 식단 예산·영양 달성
 
 ```
 src/
-  data/foods.ts         재료 가격·레시피 DB
-  data/exercises.ts     운동 DB
-  lib/nutrition.ts      칼로리·영양 목표 계산
+  data/foods.ts         재료 가격·레시피
+  data/exercises.ts     운동 방법·주의점·영상 검색어
+  lib/nutrition.ts      칼로리·영양 목표
   lib/mealPlanner.ts    주간 식단 최적화, 장보기 목록
   lib/workoutPlanner.ts 주간 운동 루틴
-  lib/ai.ts             Claude API 호출
-  lib/coachPrompt.ts    코치 시스템 프롬프트
+  lib/motivation.ts     오늘의 한마디, 칭찬, 연속 달성, 배지
+  lib/basicCoach.ts     기본 코치(오프라인)
+  lib/coachPrompt.ts    AI 코치 시스템 프롬프트
+  lib/coachContext.ts   AI 코치 서버의 요청 검사
+  lib/coachRequest.ts   Claude 요청 본문 (앱·서버 공용)
+  lib/ai.ts             AI 코치 호출 (서버 / 내 키)
   components/           화면
+server/                 AI 코치 서버 (Cloudflare Workers)
 public/                 PWA 매니페스트, 서비스 워커, 아이콘
 ```
 

@@ -1,7 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#1f8a5b"/>
-  <circle cx="256" cy="268" r="148" fill="none" stroke="#ffffff" stroke-width="36"/>
-  <path d="M256 120v-40M196 80h120" stroke="#ffffff" stroke-width="36" stroke-linecap="round"/>
-  <path d="M256 268l64-64" stroke="#dff1e7" stroke-width="36" stroke-linecap="round"/>
-  <circle cx="256" cy="268" r="22" fill="#ffffff"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3fd193"/>
+      <stop offset="1" stop-color="#139656"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <g transform="rotate(-18 256 300)">
+    <rect x="150" y="283" width="212" height="34" rx="17" fill="#ffffff"/>
+    <rect x="104" y="228" width="50" height="144" rx="22" fill="#ffffff"/>
+    <rect x="64" y="254" width="42" height="92" rx="18" fill="#c9f2dc"/>
+    <rect x="358" y="228" width="50" height="144" rx="22" fill="#ffffff"/>
+    <rect x="406" y="254" width="42" height="92" rx="18" fill="#c9f2dc"/>
+  </g>
+  <circle cx="138" cy="136" r="62" fill="#ffc93c" stroke="#ffffff" stroke-width="12"/>
+  <path d="M108 112l12 48 18-38 18 38 12-48M103 134h70" fill="none" stroke="#7a4f00" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

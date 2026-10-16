@@ -1,0 +1,12 @@
+# 알뜰핏 AI 코치 서버 설정 (Cloudflare Workers)
+# 배포 방법은 README의 "AI 코치 서버" 항목을 보세요.
+name = "alddeulfit-coach"
+main = "worker.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# 앱이 올라간 주소(출처). 여러 개면 쉼표로 구분
+ALLOWED_ORIGINS = "https://neo0364-coder.github.io"
+# COACH_MODEL = "claude-opus-5-5"
+RATE_LIMIT = "20"

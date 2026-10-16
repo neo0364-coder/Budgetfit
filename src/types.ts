@@ -2,7 +2,8 @@ export type Sex = 'male' | 'female';
 export type Goal = 'lose' | 'maintain' | 'gain';
 export type Activity = 'sedentary' | 'light' | 'moderate' | 'active';
 export type Equipment = 'none' | 'dumbbell' | 'gym';
-export type Level = 'beginner' | 'intermediate';
+/** 난이도: 1 쉬움, 2 보통, 3 도전 */
+export type Difficulty = 1 | 2 | 3;
 export type WorkoutTime = 'morning' | 'lunch' | 'evening';
 export type Allergen = 'dairy' | 'egg' | 'seafood' | 'peanut' | 'soy' | 'pork' | 'gluten';
 
@@ -26,7 +27,10 @@ export interface Profile {
   workoutMinutes: number;
   workoutTime: WorkoutTime;
   equipment: Equipment;
-  level: Level;
+  /** 운동 난이도 */
+  workoutLevel: Difficulty;
+  /** 식단 난이도 (칼로리 조절 폭, 조리 난이도) */
+  dietLevel: Difficulty;
   exclude: Allergen[];
 }
 
@@ -97,11 +101,19 @@ export interface ChatMessage {
   text: string;
   /** assistant 응답의 원본 content 블록 (다음 요청에 그대로 다시 보냄) */
   blocks?: unknown[];
+  /** 기본 코치가 답한 대화 (AI에는 보내지 않음) */
+  local?: boolean;
+}
+
+/** 코치가 참고하는 사용자 정보 (대화 시작 시점에 고정) */
+export interface CoachContext {
+  profile: Profile;
+  targets: Targets;
+  plan: WeekPlan;
 }
 
 export interface Conversation {
-  /** 대화 시작 시점에 고정한 시스템 프롬프트 */
-  system: string;
+  context: CoachContext;
   planStamp: string;
   messages: ChatMessage[];
 }

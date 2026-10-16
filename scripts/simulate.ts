@@ -1,6 +1,6 @@
 // 여러 프로필로 식단을 생성해 예산·칼로리·단백질 달성도를 확인하는 스크립트
 // 실행: npx tsx scripts/simulate.ts
-import { DEFAULT_PROFILE } from '../src/components/Onboarding';
+import { DEFAULT_PROFILE } from '../src/lib/profile';
 import { RECIPE_BY_ID } from '../src/data/foods';
 import { planMeals, shoppingList, weeklySpend } from '../src/lib/mealPlanner';
 import { computeTargets } from '../src/lib/nutrition';

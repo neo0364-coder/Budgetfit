@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { shoppingList, weeklySpend } from '../lib/mealPlanner';
 import { DAY_LABELS, won } from '../lib/time';
-import type { Targets, WeekPlan } from '../types';
+import { DIET_LEVELS } from '../lib/profile';
+import type { Difficulty, Targets, WeekPlan } from '../types';
 import RecipeCard from './RecipeCard';
 
 interface Props {
@@ -9,10 +10,12 @@ interface Props {
   targets: Targets;
   today: number;
   weeklyBudget: number;
+  dietLevel: Difficulty;
   onRegenerate: () => void;
+  onLevel: (d: Difficulty) => void;
 }
 
-export default function Meals({ plan, targets, today, weeklyBudget, onRegenerate }: Props) {
+export default function Meals({ plan, targets, today, weeklyBudget, dietLevel, onRegenerate, onLevel }: Props) {
   const [view, setView] = useState<'plan' | 'shop'>('plan');
   const [day, setDay] = useState(today);
   const [have, setHave] = useState<string[]>([]);
@@ -25,39 +28,60 @@ export default function Meals({ plan, targets, today, weeklyBudget, onRegenerate
 
   return (
     <div className="page">
-      <div className="section-head">
-        <h1>식단</h1>
-        <button className="btn ghost sm" onClick={onRegenerate}>
-          다른 메뉴로 다시 짜기
+      <div className="page-head">
+        <div>
+          <h1>이번 주 식단 🍚</h1>
+          <p className="muted small">메뉴를 누르면 재료와 만드는 법이 나와요</p>
+        </div>
+        <button className="btn soft sm" onClick={onRegenerate}>
+          🔄 다시 짜기
         </button>
       </div>
 
-      <section className="card stats">
-        <div>
-          <div className={`stat-value ${weekCost > weeklyBudget ? 'warn' : ''}`}>{won(weekCost)}</div>
-          <div className="muted small">이번 주 장보기 / 예산 {won(weeklyBudget)}</div>
+      <div className="tiles" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div className={`tile ${weekCost > weeklyBudget ? 'warn' : ''}`}>
+          <div className="emoji">🛒</div>
+          <div className="tile-value">{won(weekCost)}</div>
+          <div className="tile-label">이번 주 장보기 / 예산 {won(weeklyBudget)}</div>
         </div>
-        <div>
-          <div className="stat-value">{avgProtein}g</div>
-          <div className="muted small">평균 단백질 / {targets.proteinG}g</div>
+        <div className="tile">
+          <div className="emoji">🥚</div>
+          <div className="tile-value">{avgProtein}g</div>
+          <div className="tile-label">하루 단백질 / 목표 {targets.proteinG}g</div>
+        </div>
+      </div>
+      {weekCost <= weeklyBudget && <p className="notice info">💚 예산 안에서 {won(weeklyBudget - weekCost)} 아꼈어요!</p>}
+
+      <section className="card">
+        <div className="section-head">
+          <h2>식단 난이도</h2>
+          <span className="muted small">{DIET_LEVELS[dietLevel].desc}</span>
+        </div>
+        <div className="seg">
+          {([1, 2, 3] as Difficulty[]).map((lv) => (
+            <button key={lv} className={dietLevel === lv ? 'on' : ''} onClick={() => onLevel(lv)}>
+              {DIET_LEVELS[lv].emoji} {DIET_LEVELS[lv].label}
+            </button>
+          ))}
         </div>
       </section>
+
       {avgProtein < targets.proteinG * 0.85 && (
         <p className="notice">
-          예산 안에서 단백질이 목표보다 하루 {targets.proteinG - avgProtein}g 부족해요. 닭가슴살 100g(약 1,100원, 단백질 23g)이나 두부
+          🥚 예산 안에서 단백질이 목표보다 하루 {targets.proteinG - avgProtein}g 부족해요. 닭가슴살 100g(약 1,100원, 단백질 23g)이나 두부
           반 모(약 850원, 단백질 12g)를 추가하면 채울 수 있어요.
         </p>
       )}
       {weekCost > weeklyBudget && (
-        <p className="notice">이 예산으로는 목표 칼로리·단백질을 모두 채우기 어려워 예산을 조금 넘었어요. 예산을 늘리거나 AI 코치에게 더 저렴한 대안을 물어보세요.</p>
+        <p className="notice">😥 이 예산으로는 목표 칼로리·단백질을 모두 채우기 어려워 예산을 조금 넘었어요. 예산을 늘리거나 AI 코치에게 더 저렴한 대안을 물어보세요.</p>
       )}
 
-      <div className="seg wide">
+      <div className="seg">
         <button className={view === 'plan' ? 'on' : ''} onClick={() => setView('plan')}>
-          요일별 식단
+          📅 요일별 식단
         </button>
         <button className={view === 'shop' ? 'on' : ''} onClick={() => setView('shop')}>
-          장보기 목록
+          🛒 장보기 목록
         </button>
       </div>
 
@@ -83,13 +107,13 @@ export default function Meals({ plan, targets, today, weeklyBudget, onRegenerate
               ))}
             </div>
           </section>
-          <p className="muted small">팁: 주말에 고구마·계란·닭가슴살을 한꺼번에 삶아 두면 평일 조리 시간이 10분 이내로 줄어요.</p>
+          <p className="muted small">💡 주말에 고구마·계란·닭가슴살을 한꺼번에 삶아 두면 평일 조리 시간이 10분 이내로 줄어요.</p>
         </>
       ) : (
         <section className="card">
           <div className="section-head">
             <h2>이번 주 장보기</h2>
-            <span className="stat-value sm">{won(buyTotal)}</span>
+            <b style={{ fontSize: 20 }}>{won(buyTotal)}</b>
           </div>
           <p className="muted small">
             이미 집에 있는 재료는 체크하면 금액에서 빠져요. ★ 표시(쌀·오트밀 등)는 몇 주씩 쓰는 품목이라 이번 주 사용분만 합계에 넣었어요

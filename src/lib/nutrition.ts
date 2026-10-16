@@ -27,14 +27,16 @@ export function computeTargets(p: Profile): Targets {
   if (p.workoutDays.length >= 3 && p.activity === 'sedentary') factor = ACTIVITY_FACTOR.light;
   const tdee = b * factor;
 
+  // 식단 난이도: 쉬움일수록 칼로리 조절 폭이 작다
+  const level = p.dietLevel ?? 2;
   let kcal = tdee;
-  if (p.goal === 'lose') kcal = tdee * 0.8;
-  if (p.goal === 'gain') kcal = tdee * 1.1;
+  if (p.goal === 'lose') kcal = tdee * [0.9, 0.8, 0.75][level - 1];
+  if (p.goal === 'gain') kcal = tdee * [1.05, 1.1, 1.15][level - 1];
   const floor = p.sex === 'male' ? 1500 : 1200;
   kcal = Math.max(kcal, floor, b);
   kcal = Math.round(kcal / 10) * 10;
 
-  const proteinPerKg = p.goal === 'maintain' ? 1.4 : 1.6;
+  const proteinPerKg = (p.goal === 'maintain' ? [1.2, 1.4, 1.6] : [1.4, 1.6, 1.8])[level - 1];
   const proteinG = Math.round(p.weightKg * proteinPerKg);
   const fatG = Math.round((kcal * 0.25) / 9);
   const carbsG = Math.max(0, Math.round((kcal - proteinG * 4 - fatG * 9) / 4));

@@ -33,9 +33,9 @@ function pickExercise(pattern: Pattern, profile: Profile, variant: number, used:
     (e) =>
       e.pattern === pattern &&
       EQUIP_RANK[e.equipment] <= EQUIP_RANK[profile.equipment] &&
-      (profile.level === 'intermediate' || !e.advanced) &&
+      e.minLevel <= profile.workoutLevel &&
       !used.has(e.id),
-  ).sort((a, b) => EQUIP_RANK[b.equipment] - EQUIP_RANK[a.equipment]);
+  ).sort((a, b) => EQUIP_RANK[b.equipment] - EQUIP_RANK[a.equipment] || b.minLevel - a.minLevel);
   if (options.length === 0) return null;
   return options[variant % options.length].id;
 }
@@ -51,10 +51,18 @@ export function planWorkouts(profile: Profile, seed: number): WorkoutSession[] {
   const days = [...profile.workoutDays].sort((a, b) => a - b);
   const split = splitFor(days.length);
   const start = workoutStart(profile);
-  const sets = profile.level === 'beginner' ? 3 : 4;
+  const level = profile.workoutLevel;
+  const sets = [2, 3, 4][level - 1];
   const reps =
-    profile.goal === 'gain' ? (profile.equipment === 'gym' ? '6~10회' : '10~15회') : profile.goal === 'lose' ? '12~15회' : '10~12회';
-  const rest = profile.goal === 'gain' ? 90 : 60;
+    profile.goal === 'gain'
+      ? profile.equipment === 'gym' && level > 1
+        ? '6~10회'
+        : ['8~12회', '10~15회', '12~15회'][level - 1]
+      : profile.goal === 'lose'
+        ? ['10~12회', '12~15회', '15~20회'][level - 1]
+        : ['8~10회', '10~12회', '12~15회'][level - 1];
+  const rest = (profile.goal === 'gain' ? 90 : 60) + [15, 0, -15][level - 1];
+  const hold = ['20~30초', '30~45초', '45~60초'][level - 1];
   const perExercise = (sets * (45 + rest)) / 60; // 분
   const main = Math.max(10, profile.workoutMinutes - 10);
   const strengthShare = profile.goal === 'lose' ? 0.7 : 0.9;
@@ -76,8 +84,8 @@ export function planWorkouts(profile: Profile, seed: number): WorkoutSession[] {
       return {
         ...base,
         exercises: [
-          { exerciseId: 'plank', sets: 3, reps: '30~45초', restSec: 30 },
-          { exerciseId: 'dead-bug', sets: 3, reps: '10회(양쪽)', restSec: 30 },
+          { exerciseId: level === 1 ? 'knee-plank' : 'plank', sets, reps: hold, restSec: 30 },
+          { exerciseId: 'dead-bug', sets, reps: '10회(양쪽)', restSec: 30 },
         ],
         cardio: `${options[(seed + i) % options.length]} ${Math.max(15, main - 8)}분 (대화 가능한 강도)`,
       };
@@ -92,7 +100,7 @@ export function planWorkouts(profile: Profile, seed: number): WorkoutSession[] {
       exercises.push({
         exerciseId: id,
         sets,
-        reps: isCore ? (id.includes('plank') ? '30~45초' : '10회(양쪽)') : reps,
+        reps: isCore ? (id.includes('plank') ? hold : '10회(양쪽)') : reps,
         restSec: isCore ? 30 : rest,
       });
     }

@@ -1,63 +1,68 @@
 import Anthropic from '@anthropic-ai/sdk';
-import type { BetaContentBlockParam, BetaMessageParam } from '@anthropic-ai/sdk/resources/beta/messages/messages';
-import type { ChatMessage } from '../types';
-
-export const MODEL = 'claude-opus-5-5';
+import { BetaMessageStream } from '@anthropic-ai/sdk/lib/BetaMessageStream';
+import type { BetaMessage } from '@anthropic-ai/sdk/resources/beta/messages/messages';
+import type { ChatMessage, CoachContext } from '../types';
+import { COACH_API_URL, type CoachMode } from './coachConfig';
+import { buildCoachRequest } from './coachRequest';
 
 export class AiError extends Error {}
 
-function client(apiKey: string) {
-  // 키는 사용자 기기의 localStorage에만 저장되고 Anthropic API로 직접 전송됩니다.
-  return new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+function toReply(message: BetaMessage): ChatMessage {
+  if (message.stop_reason === 'refusal') {
+    throw new AiError('이 질문에는 답변할 수 없어요. 질문을 바꿔서 다시 시도해 주세요.');
+  }
+  const text = message.content
+    .filter((b) => b.type === 'text')
+    .map((b) => b.text)
+    .join('');
+  return { role: 'assistant', text, blocks: message.content as unknown[] };
 }
 
-function toParams(history: ChatMessage[]): BetaMessageParam[] {
-  return history.map((m) =>
-    m.role === 'assistant' && m.blocks
-      ? { role: 'assistant', content: m.blocks as BetaContentBlockParam[] }
-      : { role: m.role, content: m.text },
-  );
-}
-
-/**
- * 코치에게 질문하고 응답을 스트리밍한다.
- * history의 마지막 항목은 이번 사용자 메시지여야 한다.
- */
-export async function askCoach(
-  apiKey: string,
-  system: string,
-  history: ChatMessage[],
-  onText: (delta: string) => void,
-  signal?: AbortSignal,
-): Promise<ChatMessage> {
+async function viaServer(context: CoachContext, history: ChatMessage[], onText: (d: string) => void, signal?: AbortSignal) {
+  let res: Response;
   try {
-    const stream = client(apiKey).beta.messages.stream(
-      {
-        model: MODEL,
-        max_tokens: 16000,
-        output_config: { effort: 'medium' },
-        betas: ['server-side-fallback-2026-07-01'],
-        fallbacks: 'default',
-        system,
-        messages: toParams(history),
-      },
-      { signal },
-    );
-    stream.on('text', onText);
-    const message = await stream.finalMessage();
-
-    if (message.stop_reason === 'refusal') {
-      throw new AiError('이 질문에는 답변할 수 없어요. 질문을 바꿔서 다시 시도해 주세요.');
+    res = await fetch(COACH_API_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ context, messages: history }),
+      signal,
+    });
+  } catch (err) {
+    if (signal?.aborted) throw new AiError('응답을 중단했어요.');
+    throw new AiError('AI 코치 서버에 연결할 수 없어요.', { cause: err });
+  }
+  if (!res.ok || !res.body) {
+    let msg = `AI 코치 서버 오류(${res.status})`;
+    try {
+      const data = (await res.json()) as { error?: string };
+      if (data.error) msg = data.error;
+    } catch {
+      // 본문이 JSON이 아니면 기본 문구
     }
-    const text = message.content
-      .filter((b) => b.type === 'text')
-      .map((b) => b.text)
-      .join('');
-    return { role: 'assistant', text, blocks: message.content as unknown[] };
+    throw new AiError(msg);
+  }
+  const stream = BetaMessageStream.fromReadableStream(res.body);
+  stream.on('text', onText);
+  try {
+    return toReply(await stream.finalMessage());
+  } catch (err) {
+    if (err instanceof AiError) throw err;
+    if (signal?.aborted) throw new AiError('응답을 중단했어요.');
+    throw new AiError('응답을 받는 중에 연결이 끊겼어요.', { cause: err });
+  }
+}
+
+async function viaKey(apiKey: string, context: CoachContext, history: ChatMessage[], onText: (d: string) => void, signal?: AbortSignal) {
+  // 키는 이 기기의 localStorage에만 저장되고 Anthropic API로 직접 전송된다
+  const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+  try {
+    const stream = client.beta.messages.stream(buildCoachRequest(context, history, { effort: 'medium' }), { signal });
+    stream.on('text', onText);
+    return toReply(await stream.finalMessage());
   } catch (err) {
     if (err instanceof AiError) throw err;
     if (err instanceof Anthropic.APIUserAbortError) throw new AiError('응답을 중단했어요.');
-    if (err instanceof Anthropic.AuthenticationError) throw new AiError('API 키가 올바르지 않아요. 설정에서 키를 확인해 주세요.');
+    if (err instanceof Anthropic.AuthenticationError) throw new AiError('API 키가 올바르지 않아요. 내 정보에서 키를 확인해 주세요.');
     if (err instanceof Anthropic.PermissionDeniedError) throw new AiError('이 API 키로는 모델을 사용할 권한이 없어요.');
     if (err instanceof Anthropic.RateLimitError) throw new AiError('요청이 많아요. 잠시 후 다시 시도해 주세요.');
     if (err instanceof Anthropic.BadRequestError) throw new AiError(`요청 오류: ${err.message}`);
@@ -67,10 +72,14 @@ export async function askCoach(
   }
 }
 
-export const QUICK_PROMPTS = [
-  '이번 주 식비를 더 줄이려면 어떤 메뉴를 바꾸면 좋을까?',
-  '야근 때문에 운동을 못 한 날은 어떻게 보충해?',
-  '편의점에서 살 수 있는 고단백 저렴한 조합 알려줘',
-  '오늘 저녁 메뉴를 냉장고 재료로 바꾸고 싶어. 계란, 두부, 김치가 있어',
-  '무릎이 조금 아픈데 하체 운동 대체해줘',
-];
+/** 코치에게 질문하고 응답을 스트리밍한다. history의 마지막 항목은 이번 질문이어야 한다. */
+export function askCoach(
+  mode: Exclude<CoachMode, 'basic'>,
+  apiKey: string,
+  context: CoachContext,
+  history: ChatMessage[],
+  onText: (delta: string) => void,
+  signal?: AbortSignal,
+): Promise<ChatMessage> {
+  return mode === 'server' ? viaServer(context, history, onText, signal) : viaKey(apiKey, context, history, onText, signal);
+}

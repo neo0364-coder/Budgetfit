@@ -69,6 +69,8 @@ export function planMeals(profile: Profile, targets: Targets, seed: number): Day
 
   // 시드마다 메뉴 선호를 조금씩 달리해서 "다시 짜기"를 누르면 다른 식단이 나오게 한다
   const taste = pool.map(() => random() * 0.08);
+  // 식단 난이도 쉬움: 조리 시간이 긴 메뉴는 덜 고른다
+  const effort = pool.map((r) => (profile.dietLevel === 1 ? Math.max(0, r.minutes - 10) * 0.03 : 0));
 
   const portionOf = (day: number[]) => {
     let base = 0;
@@ -98,7 +100,7 @@ export function planMeals(profile: Profile, targets: Targets, seed: number): Day
         cost += SEASONING_COST;
         for (const [i, q] of uses[r]) totals[i] += q * m;
         counts[r]++;
-        penalty += taste[r];
+        penalty += taste[r] + effort[r];
         // 같은 날 같은 메뉴, 전날과 같은 메뉴
         for (let j = 0; j < k; j++) if (day[j] === r) penalty += 3;
         if (d > 0 && week[d - 1].includes(r)) penalty += 0.15;
